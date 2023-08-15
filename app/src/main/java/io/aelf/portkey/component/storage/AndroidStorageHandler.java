@@ -5,11 +5,9 @@ import static io.aelf.portkey.global.NullableTools.stringOrDefault;
 import android.content.Context;
 
 import org.apache.http.util.TextUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.aelf.internal.AsyncResult;
-import io.aelf.internal.IAsyncFunction;
 import io.aelf.internal.ISuccessCallback;
 import io.aelf.portkey.async.PortkeyAsyncCaller;
 import io.aelf.portkey.internal.tools.GlobalConfig;

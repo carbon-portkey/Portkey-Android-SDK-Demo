@@ -10,7 +10,7 @@ class BasicDialog {
         fun onDialogPositiveClick()
     }
 
-    companion object{
+    companion object {
         fun show(
             context: Context,
             BasicDialogCallback: BasicDialogCallback,
@@ -26,5 +26,5 @@ class BasicDialog {
                 negativeButton(text = "cancel")
             }
         }
-}
+    }
 }

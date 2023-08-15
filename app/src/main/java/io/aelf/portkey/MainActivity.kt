@@ -1,5 +1,6 @@
 package io.aelf.portkey
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.View.OnClickListener
@@ -10,19 +11,18 @@ import io.aelf.portkey.behaviour.entry.EntryBehaviourEntity.CheckedEntry
 import io.aelf.portkey.behaviour.global.EntryCheckConfig
 import io.aelf.portkey.behaviour.guardian.GuardianBehaviourEntity
 import io.aelf.portkey.behaviour.login.LoginBehaviourEntity
-import io.aelf.portkey.behaviour.pin.PinManager
 import io.aelf.portkey.behaviour.pin.SetPinBehaviourEntity
-import io.aelf.portkey.behaviour.pin.WalletUnlockEntity
 import io.aelf.portkey.behaviour.register.RegisterBehaviourEntity
 import io.aelf.portkey.behaviour.wallet.PortkeyWallet
 import io.aelf.portkey.component.dialog.InputDialog
 import io.aelf.portkey.component.recaptcha.GoogleRecaptchaService
-
 import io.aelf.portkey.databinding.ActivityMainBinding
+import io.aelf.portkey.global.WalletHolder
 import io.aelf.portkey.init.InitController
 import io.aelf.portkey.internal.model.common.AccountOriginalType
 import io.aelf.portkey.utils.log.GLogger
-import java.util.Optional
+import io.aelf.response.ResultCode
+import io.aelf.utils.AElfException
 
 class MainActivity : AppCompatActivity(), OnClickListener {
 
@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     private var entryEntity: CheckedEntry? = null
     private var loginEntity: LoginBehaviourEntity? = null
     private var pinEntity: SetPinBehaviourEntity? = null
-    private var wallet: PortkeyWallet? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         InitController.init(this)
@@ -40,32 +39,50 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         binding!!.entry.setOnClickListener(this)
         binding!!.login.setOnClickListener(this)
         binding!!.register.setOnClickListener(this)
-        binding!!.lock.setOnClickListener(this)
+        binding!!.setPin.setOnClickListener(this)
         checkButtonStatus()
         checkForLockedWallet()
     }
 
-    fun checkForLockedWallet(){
-        if (EntryBehaviourEntity.ifLockedWalletExists()){
+    override fun onRestart() {
+        super.onRestart()
+        entryEntity = null
+        loginEntity = null
+        pinEntity = null
+        checkButtonStatus()
+    }
+
+    private fun checkForLockedWallet() {
+        if (EntryBehaviourEntity.ifLockedWalletExists()) {
             GLogger.i("locked wallet exists, now to unlock.")
             InputDialog.show(this, object : InputDialog.InputDialogCallback {
                 override fun onDialogPositiveClick(text: String?) {
                     GLogger.i("pin: $text")
                     try {
-                        EntryBehaviourEntity.attemptToGetLockedWallet().ifPresent{
-                           if(!it.isValidPinValue(text!!)){
-                               GLogger.e("pin is not valid.")
-                               return@ifPresent
-                           }
+                        var wallet: PortkeyWallet? = null
+                        EntryBehaviourEntity.attemptToGetLockedWallet().ifPresent {
+                            if (!it.isValidPinValue(text!!)) {
+                                GLogger.e("pin is not valid.")
+                                return@ifPresent
+                            }
                             wallet = it.unlockAndBuildWallet(text)
                         }
                         if (wallet != null) {
                             GLogger.i("wallet: unlocked.")
+                            WalletHolder.wallet = wallet
+                            val intent = Intent(this@MainActivity, WalletActivity::class.java)
+                            startActivity(intent)
                         } else {
                             GLogger.e("wallet init failed. try again.")
                         }
                     } catch (e: Throwable) {
                         GLogger.e("wallet init failed. Restart APP and try again.")
+                        throw AElfException(
+                            e,
+                            ResultCode.INTERNAL_ERROR,
+                            "wallet init failed. Restart APP and try again.",
+                            true
+                        )
                     }
                     runOnUiThread {
                         checkButtonStatus()
@@ -76,14 +93,13 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     }
 
 
-
     fun checkButtonStatus() {
         assert(binding != null)
         if (entryEntity == null) {
             binding!!.entry.isEnabled = true
             binding!!.login.isEnabled = false
             binding!!.register.isEnabled = false
-            binding!!.lock.isEnabled = false
+            binding!!.setPin.isEnabled = false
         } else if (pinEntity == null) {
             val isRegistered = entryEntity!!.isRegistered
             binding!!.entry.isEnabled = false
@@ -97,12 +113,12 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 binding!!.login.isEnabled = false
                 binding!!.register.isEnabled = true
             }
-            binding!!.lock.isEnabled = false
+            binding!!.setPin.isEnabled = false
         } else {
             binding!!.entry.isEnabled = false
             binding!!.login.isEnabled = false
             binding!!.register.isEnabled = false
-            binding!!.lock.isEnabled = true
+            binding!!.setPin.isEnabled = true
         }
     }
 
@@ -180,7 +196,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 }
             }
 
-            R.id.lock -> {
+            R.id.lockWallet -> {
                 assert(pinEntity != null)
                 PortkeyAsyncCaller.asyncCall {
                     InputDialog.show(this@MainActivity, object : InputDialog.InputDialogCallback {
@@ -194,6 +210,10 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                 val wallet = pinEntity!!.lockAndGetWallet(text)
                                 if (wallet != null) {
                                     GLogger.i("wallet: $wallet")
+                                    WalletHolder.wallet = wallet
+                                    val intent =
+                                        Intent(this@MainActivity, WalletActivity::class.java)
+                                    startActivity(intent)
                                 } else {
                                     GLogger.e("wallet init failed. try again.")
                                 }
@@ -207,6 +227,8 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                     }, "input pin", "input pin:")
                 }
             }
+
+
         }
     }
 
@@ -295,6 +317,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 }, "input verification code", "input verification code:"
             )
         }
+
     }
 
 

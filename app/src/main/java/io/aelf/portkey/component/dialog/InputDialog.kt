@@ -9,9 +9,10 @@ import com.afollestad.materialdialogs.input.input
 
 class InputDialog {
     interface InputDialogCallback {
-        fun onDialogPositiveClick(text:String?)
+        fun onDialogPositiveClick(text: String?)
     }
-    companion object{
+
+    companion object {
         @SuppressLint("CheckResult")
         fun show(
             context: Context,
@@ -22,7 +23,7 @@ class InputDialog {
             MaterialDialog(context, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
                 title(text = title)
                 message(text = message)
-                input{ _, text ->
+                input { _, text ->
                     InputDialogCallback.onDialogPositiveClick(text.toString())
                 }
             }
