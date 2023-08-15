@@ -17,7 +17,6 @@ public class InitController {
         RetrofitProvider.resetOrInitMainRetrofit(SDKTestConfig.TEST_PORTKEY_API_HOST);
         GLogger.setLogger(new TimberLogger());
         GlobalConfig.setTestEnv(true);
-        GlobalConfig.setCurrentChainId(GlobalConfig.ChainIds.TESTNET_CHAIN_ID_ALTERNATIVE);
         GLogger.w("PortkeySDK init success");
     }
 }

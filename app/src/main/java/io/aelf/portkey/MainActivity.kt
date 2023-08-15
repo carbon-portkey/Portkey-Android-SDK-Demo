@@ -14,6 +14,7 @@ import io.aelf.portkey.behaviour.pin.PinManager
 import io.aelf.portkey.behaviour.pin.SetPinBehaviourEntity
 import io.aelf.portkey.behaviour.pin.WalletUnlockEntity
 import io.aelf.portkey.behaviour.register.RegisterBehaviourEntity
+import io.aelf.portkey.behaviour.wallet.PortkeyWallet
 import io.aelf.portkey.component.dialog.InputDialog
 import io.aelf.portkey.component.recaptcha.GoogleRecaptchaService
 
@@ -21,6 +22,7 @@ import io.aelf.portkey.databinding.ActivityMainBinding
 import io.aelf.portkey.init.InitController
 import io.aelf.portkey.internal.model.common.AccountOriginalType
 import io.aelf.portkey.utils.log.GLogger
+import java.util.Optional
 
 class MainActivity : AppCompatActivity(), OnClickListener {
 
@@ -28,7 +30,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
     private var entryEntity: CheckedEntry? = null
     private var loginEntity: LoginBehaviourEntity? = null
     private var pinEntity: SetPinBehaviourEntity? = null
-    private var wallet: WalletUnlockEntity? = null
+    private var wallet: PortkeyWallet? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         InitController.init(this)
@@ -40,7 +42,40 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         binding!!.register.setOnClickListener(this)
         binding!!.lock.setOnClickListener(this)
         checkButtonStatus()
+        checkForLockedWallet()
     }
+
+    fun checkForLockedWallet(){
+        if (EntryBehaviourEntity.ifLockedWalletExists()){
+            GLogger.i("locked wallet exists, now to unlock.")
+            InputDialog.show(this, object : InputDialog.InputDialogCallback {
+                override fun onDialogPositiveClick(text: String?) {
+                    GLogger.i("pin: $text")
+                    try {
+                        EntryBehaviourEntity.attemptToGetLockedWallet().ifPresent{
+                           if(!it.isValidPinValue(text!!)){
+                               GLogger.e("pin is not valid.")
+                               return@ifPresent
+                           }
+                            wallet = it.unlockAndBuildWallet(text)
+                        }
+                        if (wallet != null) {
+                            GLogger.i("wallet: unlocked.")
+                        } else {
+                            GLogger.e("wallet init failed. try again.")
+                        }
+                    } catch (e: Throwable) {
+                        GLogger.e("wallet init failed. Restart APP and try again.")
+                    }
+                    runOnUiThread {
+                        checkButtonStatus()
+                    }
+                }
+            }, "input pin", "input pin:")
+        }
+    }
+
+
 
     fun checkButtonStatus() {
         assert(binding != null)
