@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                             try {
                                 guardianCheck(guardian, loginEntity, null)
                             } catch (e: Throwable) {
-                                GLogger.e("guardian check failed.")
+                                GLogger.e("guardian check failed.", AElfException(e))
                             }
                             runOnUiThread {
                                 checkButtonStatus()
@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                         try {
                             guardianCheck(it.guardian, null, it)
                         } catch (e: Throwable) {
-                            GLogger.e("guardian check failed.")
+                            GLogger.e("guardian check failed.", AElfException(e))
                         }
                         if (it.isVerified) {
                             GLogger.i("now registered. click lock button to continue.")
@@ -252,30 +252,32 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                 GLogger.e("send verification code failed.")
                                 return@asyncCall
                             }
-                            InputDialog.show(
-                                this@MainActivity,
-                                object : InputDialog.InputDialogCallback {
-                                    override fun onDialogPositiveClick(text: String?) {
-                                        GLogger.i("verification code: $text")
-                                        val succeed1 =
-                                            guardian.verifyVerificationCode(text!!)
-                                        GLogger.i("verify verification code succeed: $succeed1")
-                                        if (!succeed1) {
-                                            GLogger.e("verify verification code failed.")
-                                        }
-                                        if (loginBehaviourEntity != null) {
-                                            if (!loginBehaviourEntity.isFulfilled) {
-                                                GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
-                                                GLogger.i("click lock button to continue.")
-                                            } else {
-                                                GLogger.i("all guardians are fulfilled, now to lock.")
+                            runOnUiThread {
+                                InputDialog.show(
+                                    this@MainActivity,
+                                    object : InputDialog.InputDialogCallback {
+                                        override fun onDialogPositiveClick(text: String?) {
+                                            GLogger.i("verification code: $text")
+                                            val succeed1 =
+                                                guardian.verifyVerificationCode(text!!)
+                                            GLogger.i("verify verification code succeed: $succeed1")
+                                            if (!succeed1) {
+                                                GLogger.e("verify verification code failed.")
                                             }
-                                        } else if (registerEntity != null) {
-                                            GLogger.i("now registered. click lock button to continue.")
+                                            if (loginBehaviourEntity != null) {
+                                                if (!loginBehaviourEntity.isFulfilled) {
+                                                    GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
+                                                    GLogger.i("click lock button to continue.")
+                                                } else {
+                                                    GLogger.i("all guardians are fulfilled, now to lock.")
+                                                }
+                                            } else if (registerEntity != null) {
+                                                GLogger.i("now registered. click lock button to continue.")
+                                            }
                                         }
-                                    }
-                                }, "input verification code", "input verification code:"
-                            )
+                                    }, "input verification code", "input verification code:"
+                                )
+                            }
                         }
                     }
 
@@ -292,30 +294,32 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 GLogger.e("send verification code failed.")
                 return
             }
-            InputDialog.show(
-                this@MainActivity,
-                object : InputDialog.InputDialogCallback {
-                    override fun onDialogPositiveClick(text: String?) {
-                        GLogger.i("verification code: $text")
-                        val succeed1 =
-                            guardian.verifyVerificationCode(text!!)
-                        GLogger.i("verify verification code succeed: $succeed1")
-                        if (!succeed1) {
-                            GLogger.e("verify verification code failed.")
-                        }
-                        if (loginBehaviourEntity != null) {
-                            if (!loginBehaviourEntity.isFulfilled) {
-                                GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
-                                GLogger.i("click login again to continue.")
-                            } else {
-                                GLogger.i("all guardians are fulfilled, now to lock.")
+            runOnUiThread {
+                InputDialog.show(
+                    this@MainActivity,
+                    object : InputDialog.InputDialogCallback {
+                        override fun onDialogPositiveClick(text: String?) {
+                            GLogger.i("verification code: $text")
+                            val succeed1 =
+                                guardian.verifyVerificationCode(text!!)
+                            GLogger.i("verify verification code succeed: $succeed1")
+                            if (!succeed1) {
+                                GLogger.e("verify verification code failed.")
                             }
-                        } else if (registerEntity != null) {
-                            GLogger.i("now registered. click lock button to continue.")
+                            if (loginBehaviourEntity != null) {
+                                if (!loginBehaviourEntity.isFulfilled) {
+                                    GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
+                                    GLogger.i("click login again to continue.")
+                                } else {
+                                    GLogger.i("all guardians are fulfilled, now to lock.")
+                                }
+                            } else if (registerEntity != null) {
+                                GLogger.i("now registered. click lock button to continue.")
+                            }
                         }
-                    }
-                }, "input verification code", "input verification code:"
-            )
+                    }, "input verification code", "input verification code:"
+                )
+            }
         }
 
     }
