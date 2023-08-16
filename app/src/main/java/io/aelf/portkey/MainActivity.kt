@@ -164,6 +164,10 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                             } catch (e: Throwable) {
                                 GLogger.e("guardian check failed.", AElfException(e))
                             }
+                            if (it.isFulfilled) {
+                                GLogger.i("now verified. click pin button to continue.")
+                                pinEntity = it.afterVerified()
+                            }
                             runOnUiThread {
                                 checkButtonStatus()
                             }
@@ -186,7 +190,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                             GLogger.e("guardian check failed.", AElfException(e))
                         }
                         if (it.isVerified) {
-                            GLogger.i("now registered. click lock button to continue.")
+                            GLogger.i("now registered. click pin button to continue.")
                             pinEntity = it.afterVerified()
                         }
                         runOnUiThread {
