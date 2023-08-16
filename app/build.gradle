@@ -72,6 +72,7 @@ dependencies {
     //dependency for the reCAPTCHA (safetynet)
     implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'
+    implementation 'com.google.android.gms:play-services-auth:20.6.0'
 
 
     testImplementation 'junit:junit:4.13.2'

@@ -261,22 +261,24 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                     this@MainActivity,
                                     object : InputDialog.InputDialogCallback {
                                         override fun onDialogPositiveClick(text: String?) {
-                                            GLogger.i("verification code: $text")
-                                            val succeed1 =
-                                                guardian.verifyVerificationCode(text!!)
-                                            GLogger.i("verify verification code succeed: $succeed1")
-                                            if (!succeed1) {
-                                                GLogger.e("verify verification code failed.")
-                                            }
-                                            if (loginBehaviourEntity != null) {
-                                                if (!loginBehaviourEntity.isFulfilled) {
-                                                    GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
-                                                    GLogger.i("click lock button to continue.")
-                                                } else {
-                                                    GLogger.i("all guardians are fulfilled, now to lock.")
+                                            PortkeyAsyncCaller.asyncCall {
+                                                GLogger.i("verification code: $text")
+                                                val succeed1 =
+                                                    guardian.verifyVerificationCode(text!!)
+                                                GLogger.i("verify verification code succeed: $succeed1")
+                                                if (!succeed1) {
+                                                    GLogger.e("verify verification code failed.")
                                                 }
-                                            } else if (registerEntity != null) {
-                                                GLogger.i("now registered. click lock button to continue.")
+                                                if (loginBehaviourEntity != null) {
+                                                    if (!loginBehaviourEntity.isFulfilled) {
+                                                        GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
+                                                        GLogger.i("click lock button to continue.")
+                                                    } else {
+                                                        GLogger.i("all guardians are fulfilled, now to lock.")
+                                                    }
+                                                } else if (registerEntity != null) {
+                                                    GLogger.i("now registered. click lock button to continue.")
+                                                }
                                             }
                                         }
                                     }, "input verification code", "input verification code:"
@@ -303,22 +305,24 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                     this@MainActivity,
                     object : InputDialog.InputDialogCallback {
                         override fun onDialogPositiveClick(text: String?) {
-                            GLogger.i("verification code: $text")
-                            val succeed1 =
-                                guardian.verifyVerificationCode(text!!)
-                            GLogger.i("verify verification code succeed: $succeed1")
-                            if (!succeed1) {
-                                GLogger.e("verify verification code failed.")
-                            }
-                            if (loginBehaviourEntity != null) {
-                                if (!loginBehaviourEntity.isFulfilled) {
-                                    GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
-                                    GLogger.i("click login again to continue.")
-                                } else {
-                                    GLogger.i("all guardians are fulfilled, now to lock.")
+                            PortkeyAsyncCaller.asyncCall {
+                                GLogger.i("verification code: $text")
+                                val succeed1 =
+                                    guardian.verifyVerificationCode(text!!)
+                                GLogger.i("verify verification code succeed: $succeed1")
+                                if (!succeed1) {
+                                    GLogger.e("verify verification code failed.")
                                 }
-                            } else if (registerEntity != null) {
-                                GLogger.i("now registered. click lock button to continue.")
+                                if (loginBehaviourEntity != null) {
+                                    if (!loginBehaviourEntity.isFulfilled) {
+                                        GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
+                                        GLogger.i("click login again to continue.")
+                                    } else {
+                                        GLogger.i("all guardians are fulfilled, now to lock.")
+                                    }
+                                } else if (registerEntity != null) {
+                                    GLogger.i("now registered. click lock button to continue.")
+                                }
                             }
                         }
                     }, "input verification code", "input verification code:"
