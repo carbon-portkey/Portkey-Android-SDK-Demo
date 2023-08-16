@@ -164,13 +164,6 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                             } catch (e: Throwable) {
                                 GLogger.e("guardian check failed.", AElfException(e))
                             }
-                            if (it.isFulfilled) {
-                                GLogger.i("now verified. click pin button to continue.")
-                                pinEntity = it.afterVerified()
-                            }
-                            runOnUiThread {
-                                checkButtonStatus()
-                            }
                         }
                     }
                 }
@@ -188,13 +181,6 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                             guardianCheck(it.guardian, null, it)
                         } catch (e: Throwable) {
                             GLogger.e("guardian check failed.", AElfException(e))
-                        }
-                        if (it.isVerified) {
-                            GLogger.i("now registered. click pin button to continue.")
-                            pinEntity = it.afterVerified()
-                        }
-                        runOnUiThread {
-                            checkButtonStatus()
                         }
                     }
                 }
@@ -261,23 +247,26 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                     this@MainActivity,
                                     object : InputDialog.InputDialogCallback {
                                         override fun onDialogPositiveClick(text: String?) {
-                                            PortkeyAsyncCaller.asyncCall {
+                                             PortkeyAsyncCaller.asyncCall {
                                                 GLogger.i("verification code: $text")
                                                 val succeed1 =
                                                     guardian.verifyVerificationCode(text!!)
                                                 GLogger.i("verify verification code succeed: $succeed1")
                                                 if (!succeed1) {
                                                     GLogger.e("verify verification code failed.")
+                                                    return@asyncCall
                                                 }
                                                 if (loginBehaviourEntity != null) {
                                                     if (!loginBehaviourEntity.isFulfilled) {
                                                         GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
                                                         GLogger.i("click lock button to continue.")
                                                     } else {
-                                                        GLogger.i("all guardians are fulfilled, now to lock.")
+                                                        GLogger.w("all guardians are fulfilled, now to pin.")
+                                                        pinEntity = loginBehaviourEntity.afterVerified()
                                                     }
                                                 } else if (registerEntity != null) {
                                                     GLogger.i("now registered. click lock button to continue.")
+                                                    pinEntity = registerEntity.afterVerified()
                                                 }
                                             }
                                         }
@@ -316,12 +305,14 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                 if (loginBehaviourEntity != null) {
                                     if (!loginBehaviourEntity.isFulfilled) {
                                         GLogger.i("now ${loginBehaviourEntity.fullFilledGuardianCount}/${loginBehaviourEntity.fullFilledGuardianCount} guardians are fulfilled.")
-                                        GLogger.i("click login again to continue.")
+                                        GLogger.i("click lock button to continue.")
                                     } else {
-                                        GLogger.i("all guardians are fulfilled, now to lock.")
+                                        GLogger.w("all guardians are fulfilled, now to pin.")
+                                        pinEntity = loginBehaviourEntity.afterVerified()
                                     }
                                 } else if (registerEntity != null) {
                                     GLogger.i("now registered. click lock button to continue.")
+                                    pinEntity = registerEntity.afterVerified()
                                 }
                             }
                         }
