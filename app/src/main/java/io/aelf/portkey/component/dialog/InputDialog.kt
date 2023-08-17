@@ -16,7 +16,7 @@ class InputDialog {
         @SuppressLint("CheckResult")
         fun show(
             context: Context,
-            InputDialogCallback: InputDialogCallback,
+            inputDialogCallback: InputDialogCallback,
             title: String?,
             message: String?,
         ) {
@@ -24,7 +24,7 @@ class InputDialog {
                 title(text = title)
                 message(text = message)
                 input { _, text ->
-                    InputDialogCallback.onDialogPositiveClick(text.toString())
+                    inputDialogCallback.onDialogPositiveClick(text.toString())
                 }
             }
         }

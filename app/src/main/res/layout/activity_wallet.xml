@@ -43,7 +43,7 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <com.jraska.console.Console
-        android:id="@+id/console"
+        android:id="@+id/wallet_console"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_anchorGravity="center"
@@ -64,7 +64,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/console"
+        app:layout_constraintTop_toBottomOf="@+id/wallet_console"
         app:layout_constraintVertical_bias="0.038" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

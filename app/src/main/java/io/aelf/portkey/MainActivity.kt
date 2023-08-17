@@ -4,7 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.View.OnClickListener
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
+import com.google.gson.Gson
+import com.jraska.console.Console
 import io.aelf.portkey.async.PortkeyAsyncCaller
 import io.aelf.portkey.behaviour.entry.EntryBehaviourEntity
 import io.aelf.portkey.behaviour.entry.EntryBehaviourEntity.CheckedEntry
@@ -17,6 +22,7 @@ import io.aelf.portkey.behaviour.wallet.PortkeyWallet
 import io.aelf.portkey.component.dialog.InputDialog
 import io.aelf.portkey.component.recaptcha.GoogleRecaptchaService
 import io.aelf.portkey.databinding.ActivityMainBinding
+import io.aelf.portkey.global.SDKTestConfig
 import io.aelf.portkey.global.WalletHolder
 import io.aelf.portkey.init.InitController
 import io.aelf.portkey.internal.model.common.AccountOriginalType
@@ -24,7 +30,7 @@ import io.aelf.portkey.utils.log.GLogger
 import io.aelf.response.ResultCode
 import io.aelf.utils.AElfException
 
-class MainActivity : AppCompatActivity(), OnClickListener {
+class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSelectedListener {
 
     private var binding: ActivityMainBinding? = null
     private var entryEntity: CheckedEntry? = null
@@ -40,15 +46,34 @@ class MainActivity : AppCompatActivity(), OnClickListener {
         binding!!.login.setOnClickListener(this)
         binding!!.register.setOnClickListener(this)
         binding!!.setPin.setOnClickListener(this)
+        val spinner: Spinner = binding!!.spinner
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.hosts_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
+        }
+        spinner.onItemSelectedListener = this
         checkButtonStatus()
         checkForLockedWallet()
     }
 
     override fun onRestart() {
         super.onRestart()
+        clear()
+    }
+
+    private fun clear() {
         entryEntity = null
         loginEntity = null
         pinEntity = null
+        Console.clear()
+        GLogger.w("clear : all data cleared.")
         checkButtonStatus()
     }
 
@@ -160,6 +185,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                         val guardian = loginEntity!!.nextWaitingGuardian().get()
                         PortkeyAsyncCaller.asyncCall {
                             try {
+                                GLogger.w("now using: " + (Gson().toJson(guardian.originalGuardianInfo)))
                                 guardianCheck(guardian, loginEntity, null)
                             } catch (e: Throwable) {
                                 GLogger.e("guardian check failed.", AElfException(e))
@@ -178,6 +204,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 entryEntity!!.asRegisterChain().onRegisterStep {
                     PortkeyAsyncCaller.asyncCall {
                         try {
+                            GLogger.w("now using: " + (Gson().toJson(it.guardian.originalGuardianInfo)))
                             guardianCheck(it.guardian, null, it)
                         } catch (e: Throwable) {
                             GLogger.e("guardian check failed.", AElfException(e))
@@ -186,15 +213,15 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                 }
             }
 
-            R.id.lockWallet -> {
+            R.id.setPin -> {
                 assert(pinEntity != null)
-                PortkeyAsyncCaller.asyncCall {
-                    InputDialog.show(this@MainActivity, object : InputDialog.InputDialogCallback {
-                        override fun onDialogPositiveClick(text: String?) {
+                InputDialog.show(this@MainActivity, object : InputDialog.InputDialogCallback {
+                    override fun onDialogPositiveClick(text: String?) {
+                        PortkeyAsyncCaller.asyncCall {
                             GLogger.i("pin: $text")
                             if (!pinEntity!!.isValidPin(text!!)) {
                                 GLogger.e("pin is not valid.")
-                                return
+                                return@asyncCall
                             }
                             try {
                                 val wallet = pinEntity!!.lockAndGetWallet(text)
@@ -214,8 +241,8 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                 checkButtonStatus()
                             }
                         }
-                    }, "input pin", "input pin:")
-                }
+                    }
+                }, "input pin", "input pin:")
             }
 
 
@@ -247,7 +274,7 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                     this@MainActivity,
                                     object : InputDialog.InputDialogCallback {
                                         override fun onDialogPositiveClick(text: String?) {
-                                             PortkeyAsyncCaller.asyncCall {
+                                            PortkeyAsyncCaller.asyncCall {
                                                 GLogger.i("verification code: $text")
                                                 val succeed1 =
                                                     guardian.verifyVerificationCode(text!!)
@@ -262,15 +289,22 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                                         GLogger.i("click lock button to continue.")
                                                     } else {
                                                         GLogger.w("all guardians are fulfilled, now to pin.")
-                                                        pinEntity = loginBehaviourEntity.afterVerified()
+                                                        pinEntity =
+                                                            loginBehaviourEntity.afterVerified()
                                                     }
                                                 } else if (registerEntity != null) {
                                                     GLogger.i("now registered. click lock button to continue.")
                                                     pinEntity = registerEntity.afterVerified()
                                                 }
+                                                runOnUiThread {
+                                                    checkButtonStatus()
+                                                }
                                             }
                                         }
-                                    }, "input verification code", "input verification code:"
+                                    },
+                                    "input verification code",
+                                    "guardian info : \n" + (Gson().toJson(guardian.originalGuardianInfo)) +
+                                            "\ninput verification code:"
                                 )
                             }
                         }
@@ -278,7 +312,6 @@ class MainActivity : AppCompatActivity(), OnClickListener {
 
                     override fun onGoogleRecaptchaFailed() {
                         GLogger.e("reCaptcha failed.")
-                        throw Exception("reCaptcha failed.")
                     }
                 })
         } else {
@@ -314,13 +347,40 @@ class MainActivity : AppCompatActivity(), OnClickListener {
                                     GLogger.i("now registered. click lock button to continue.")
                                     pinEntity = registerEntity.afterVerified()
                                 }
+                                runOnUiThread {
+                                    checkButtonStatus()
+                                }
                             }
                         }
-                    }, "input verification code", "input verification code:"
+                    },
+                    "input verification code",
+                    "guardian info : \n" + (Gson().toJson(guardian.originalGuardianInfo)) +
+                            "\ninput verification code:"
                 )
             }
         }
 
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        when (position) {
+            0 -> {
+                InitController.resetHost(this, SDKTestConfig.TEST2_PORTKEY_API_HOST)
+            }
+
+            1 -> {
+                InitController.resetHost(this, SDKTestConfig.TEST1_PORTKEY_API_HOST)
+            }
+
+            2 -> {
+                InitController.resetHost(this, SDKTestConfig.TEST_PORTKEY_API_HOST)
+            }
+        }
+        clear()
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+        InitController.resetHost(this, SDKTestConfig.DEFAULT_PORTKEY_API_HOST)
     }
 
 

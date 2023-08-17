@@ -13,7 +13,7 @@ class BasicDialog {
     companion object {
         fun show(
             context: Context,
-            BasicDialogCallback: BasicDialogCallback,
+            basicDialogCallback: BasicDialogCallback,
             title: String?,
             message: String?,
         ) {
@@ -21,7 +21,7 @@ class BasicDialog {
                 title(text = title)
                 message(text = message)
                 positiveButton(text = "confirm") {
-                    BasicDialogCallback.onDialogPositiveClick()
+                    basicDialogCallback.onDialogPositiveClick()
                 }
                 negativeButton(text = "cancel")
             }

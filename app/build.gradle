@@ -15,6 +15,9 @@ android {
             excludes += ['META-INF/DEPENDENCIES', 'META-INF/NOTICE', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt']
         }
     }
+    configurations {
+        all*.exclude module: 'bcprov-jdk15on'
+    }
 
 
     kotlinOptions {
@@ -60,7 +63,6 @@ dependencies {
     implementation('io.aelf:portkey-java-sdk:0.0.7-SNAPSHOT') {
         changing = true
         exclude group: 'io.github.billywei01'
-        exclude group: 'org.bouncycastle'
         exclude group: 'org.realityforge.org.jetbrains.annotations'
     }
     // https://mvnrepository.com/artifact/io.github.billywei01/fastkv

@@ -25,6 +25,7 @@ class WalletActivity : AppCompatActivity(), View.OnClickListener {
         binding.buildConfig.setOnClickListener(this)
         binding.chainNetworkStatus.setOnClickListener(this)
         binding.keypair.setOnClickListener(this)
+
     }
 
     override fun onClick(v: View?) {

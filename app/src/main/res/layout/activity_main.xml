@@ -17,18 +17,31 @@
         android:layout_height="match_parent">
 
 
+        <Button
+            android:id="@+id/GoogleLogIn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="google_login"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/setPin"
+            app:layout_constraintVertical_bias="0.0" />
+
         <com.jraska.console.Console
+            android:id="@+id/main_console"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.3"
             app:layout_anchor="@+id/constraintLayout"
             app:layout_anchorGravity="center"
             app:layout_constraintBottom_toTopOf="@+id/entry"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.3"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintVertical_bias="0.0" />
 
         <Button
             android:id="@+id/entry"
@@ -40,7 +53,7 @@
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.625" />
+            app:layout_constraintVertical_bias="0.342" />
 
         <Button
             android:id="@+id/login"
@@ -64,7 +77,7 @@
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/login"
-            app:layout_constraintVertical_bias="0.043" />
+            app:layout_constraintVertical_bias="0.0" />
 
         <Button
             android:id="@+id/setPin"
@@ -77,6 +90,27 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/register"
             app:layout_constraintVertical_bias="0.0" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="78dp"
+            android:layout_height="21dp"
+            android:text="Now using : "
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/main_console"
+            app:layout_constraintVertical_bias="0.859" />
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.069"
+            app:layout_constraintStart_toEndOf="@+id/textView"
+            app:layout_constraintTop_toBottomOf="@+id/main_console"
+            app:layout_constraintVertical_bias="0.858" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
