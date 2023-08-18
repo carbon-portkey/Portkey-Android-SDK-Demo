@@ -7,7 +7,15 @@ import android.view.View.OnClickListener
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import com.google.gson.Gson
 import com.jraska.console.Console
 import io.aelf.internal.sdkv2.AElfClientV2
@@ -29,16 +37,17 @@ import io.aelf.portkey.init.InitController
 import io.aelf.portkey.internal.model.common.AccountOriginalType
 import io.aelf.portkey.internal.model.wallet.WalletBuildConfig
 import io.aelf.portkey.utils.log.GLogger
-import io.aelf.response.ResultCode
-import io.aelf.schemas.KeyPairInfo
 import io.aelf.utils.AElfException
+
 
 class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSelectedListener {
 
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
     private var binding: ActivityMainBinding? = null
     private var entryEntity: CheckedEntry? = null
     private var loginEntity: LoginBehaviourEntity? = null
     private var pinEntity: SetPinBehaviourEntity? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         InitController.init(this)
@@ -50,6 +59,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
         binding!!.register.setOnClickListener(this)
         binding!!.setPin.setOnClickListener(this)
         binding!!.mockWallet.setOnClickListener(this)
+        binding!!.googleLogIn.setOnClickListener(this)
         val spinner: Spinner = binding!!.spinner
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter.createFromResource(
@@ -65,11 +75,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
         spinner.onItemSelectedListener = this
         checkButtonStatus()
         checkForLockedWallet()
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        clear()
+        initGoogleSignInClient()
     }
 
     private fun clear() {
@@ -79,6 +85,17 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
         Console.clear()
         GLogger.w("clear : all data cleared.")
         checkButtonStatus()
+    }
+
+    private fun initGoogleSignInClient() {
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN) //请求邮箱
+            .requestEmail()
+            .requestIdToken(SDKTestConfig.GOOGLE_AUTH_TOKEN)
+            .build()
+        // Build a GoogleSignInClient with the options specified by gso.
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
     private fun checkForLockedWallet() {
@@ -243,19 +260,58 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
                 }, "input pin", "input pin:")
             }
 
+            R.id.googleLogIn -> {
+                val account = GoogleSignIn.getLastSignedInAccount(this)
+                if (account == null) {
+                    val signInIntent = mGoogleSignInClient.signInIntent
+                    mActivityLauncher.launch(signInIntent)
+                } else {
+                    GLogger.i("already logged in.")
+                }
+            }
+
             R.id.mockWallet -> {
-                val keyPairInfo=AElfClientV2(SDKTestConfig.TEST_AELF_NODE_HOST).generateKeyPairInfo()
-                val mockEntity=SetPinBehaviourEntity(
+                val keyPairInfo =
+                    AElfClientV2(SDKTestConfig.TEST_AELF_NODE_HOST).generateKeyPairInfo()
+                val mockEntity = SetPinBehaviourEntity(
                     WalletBuildConfig()
                         .setSessionId("mockSessionId")
                         .setAElfEndpoint(SDKTestConfig.TEST_AELF_NODE_HOST)
                         .setPrivKey(keyPairInfo.privateKey)
                 )
-                WalletHolder.wallet=mockEntity.lockAndGetWallet(SDKTestConfig.MOCK_PIN)
+                WalletHolder.wallet = mockEntity.lockAndGetWallet(SDKTestConfig.MOCK_PIN)
                 val intent = Intent(this@MainActivity, WalletActivity::class.java)
                 startActivity(intent)
             }
+        }
+    }
 
+    private val mActivityLauncher = registerForActivityResult<Intent, ActivityResult>(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        if (result.resultCode == RESULT_OK) {
+            val task =
+                GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            handleSignInResult(task)
+        } else {
+            GLogger.e("login failed.")
+            result.data?.extras?.getByteArray(result.data?.extras?.keySet()?.elementAt(0))?.let {
+                GLogger.e("status: ${String(it)}")
+            }
+        }
+    }
+
+
+    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = completedTask.getResult(ApiException::class.java)
+            // Signed in successfully, show authenticated UI.
+            GLogger.w("signInResult:success, account: $account")
+        } catch (e: ApiException) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            GLogger.t("signInResult:failed code=" + e.statusCode)
+            GLogger.t("signInResult:failed msg=" + e.statusMessage)
         }
     }
 
@@ -393,5 +449,10 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
         InitController.resetHost(this, SDKTestConfig.DEFAULT_PORTKEY_API_HOST)
     }
 
-
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        GLogger.i("requestCode:$requestCode")
+//        GLogger.i("resultCode:$resultCode")
+//        GLogger.i("data:$data")
+//    }
 }
