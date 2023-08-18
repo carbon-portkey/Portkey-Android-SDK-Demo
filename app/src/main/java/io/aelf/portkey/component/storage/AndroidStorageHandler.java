@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import io.aelf.internal.AsyncResult;
 import io.aelf.internal.ISuccessCallback;
 import io.aelf.portkey.async.PortkeyAsyncCaller;
+import io.aelf.portkey.global.SDKTestConfig;
 import io.aelf.portkey.internal.tools.GlobalConfig;
 import io.aelf.portkey.storage.IStorageBehaviour;
 import io.aelf.portkey.utils.log.GLogger;
@@ -26,8 +27,7 @@ public class AndroidStorageHandler implements IStorageBehaviour {
 
     public AndroidStorageHandler(Context context, @Nullable String storagePath, @Nullable String bucketName, @Nullable FastCipher cipher) {
         FastKV.Builder builder = new FastKV.Builder(
-                stringOrDefault(storagePath, context.getFilesDir().getAbsolutePath()),
-                stringOrDefault(bucketName, GlobalConfig.NAME_PORTKEY_SDK)
+                context, stringOrDefault(storagePath, GlobalConfig.URL_SYMBOL_PORTKEY)
         );
         if (cipher != null) {
             builder.cipher(cipher);

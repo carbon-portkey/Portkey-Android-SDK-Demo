@@ -10,6 +10,7 @@ import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.jraska.console.Console
+import io.aelf.internal.sdkv2.AElfClientV2
 import io.aelf.portkey.async.PortkeyAsyncCaller
 import io.aelf.portkey.behaviour.entry.EntryBehaviourEntity
 import io.aelf.portkey.behaviour.entry.EntryBehaviourEntity.CheckedEntry
@@ -26,8 +27,10 @@ import io.aelf.portkey.global.SDKTestConfig
 import io.aelf.portkey.global.WalletHolder
 import io.aelf.portkey.init.InitController
 import io.aelf.portkey.internal.model.common.AccountOriginalType
+import io.aelf.portkey.internal.model.wallet.WalletBuildConfig
 import io.aelf.portkey.utils.log.GLogger
 import io.aelf.response.ResultCode
+import io.aelf.schemas.KeyPairInfo
 import io.aelf.utils.AElfException
 
 class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSelectedListener {
@@ -46,6 +49,7 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
         binding!!.login.setOnClickListener(this)
         binding!!.register.setOnClickListener(this)
         binding!!.setPin.setOnClickListener(this)
+        binding!!.mockWallet.setOnClickListener(this)
         val spinner: Spinner = binding!!.spinner
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter.createFromResource(
@@ -102,12 +106,6 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
                         }
                     } catch (e: Throwable) {
                         GLogger.e("wallet init failed. Restart APP and try again.")
-                        throw AElfException(
-                            e,
-                            ResultCode.INTERNAL_ERROR,
-                            "wallet init failed. Restart APP and try again.",
-                            true
-                        )
                     }
                     runOnUiThread {
                         checkButtonStatus()
@@ -245,6 +243,18 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
                 }, "input pin", "input pin:")
             }
 
+            R.id.mockWallet -> {
+                val keyPairInfo=AElfClientV2(SDKTestConfig.TEST_AELF_NODE_HOST).generateKeyPairInfo()
+                val mockEntity=SetPinBehaviourEntity(
+                    WalletBuildConfig()
+                        .setSessionId("mockSessionId")
+                        .setAElfEndpoint(SDKTestConfig.TEST_AELF_NODE_HOST)
+                        .setPrivKey(keyPairInfo.privateKey)
+                )
+                WalletHolder.wallet=mockEntity.lockAndGetWallet(SDKTestConfig.MOCK_PIN)
+                val intent = Intent(this@MainActivity, WalletActivity::class.java)
+                startActivity(intent)
+            }
 
         }
     }

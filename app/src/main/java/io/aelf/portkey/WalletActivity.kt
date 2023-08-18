@@ -25,7 +25,6 @@ class WalletActivity : AppCompatActivity(), View.OnClickListener {
         binding.buildConfig.setOnClickListener(this)
         binding.chainNetworkStatus.setOnClickListener(this)
         binding.keypair.setOnClickListener(this)
-
     }
 
     override fun onClick(v: View?) {
@@ -38,15 +37,12 @@ class WalletActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.buildConfig -> {
                 val wallet: PortkeyWallet = WalletHolder.wallet!!
-                val endpoint: Field = PortkeyWallet::class.java.getDeclaredField("endpoint")
-                endpoint.isAccessible = true
-                val endpointValue = endpoint.get(wallet)
                 val sessionId = PortkeyWallet::class.java.getDeclaredField("sessionId")
                 sessionId.isAccessible = true
                 val sessionIdValue = sessionId.get(wallet)
                 val walletBuildConfig = WalletBuildConfig()
                     .setSessionId(sessionIdValue as String)
-                    .setAElfEndpoint(endpointValue as String)
+                    .setAElfEndpoint(null)
                     .setPrivKey(wallet.keyPairInfo.privateKey)
                 GLogger.i("walletBuildConfig:${Gson().toJson(walletBuildConfig)}")
             }
