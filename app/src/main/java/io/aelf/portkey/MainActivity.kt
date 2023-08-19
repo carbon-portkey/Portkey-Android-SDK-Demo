@@ -289,16 +289,16 @@ class MainActivity : AppCompatActivity(), OnClickListener, AdapterView.OnItemSel
     private val mActivityLauncher = registerForActivityResult<Intent, ActivityResult>(
         ActivityResultContracts.StartActivityForResult()
     ) { result: ActivityResult ->
-        if (result.resultCode == RESULT_OK) {
+//        if (result.resultCode == RESULT_OK) {
             val task =
                 GoogleSignIn.getSignedInAccountFromIntent(result.data)
             handleSignInResult(task)
-        } else {
-            GLogger.e("login failed.")
-            result.data?.extras?.getByteArray(result.data?.extras?.keySet()?.elementAt(0))?.let {
-                GLogger.e("status: ${String(it)}")
-            }
-        }
+//        } else {
+//            GLogger.e("login failed.")
+//            result.data?.extras?.getByteArray(result.data?.extras?.keySet()?.elementAt(0))?.let {
+//                GLogger.e("status: ${String(it)}")
+//            }
+//        }
     }
 
 
